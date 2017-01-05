@@ -1,1 +1,3 @@
-a
+{
+    "staticserver.port" : 1898
+}
