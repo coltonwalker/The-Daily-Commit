@@ -8,11 +8,20 @@
 </head>
 
 <body>
-    <h1>Login To Your Google Account</h1>
-    <div class="g-signin2" data-onsuccess="onSignIn"></div>
-    <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script> <a href="#" onclick="signOut();">Sign out</a>
-    <script src="main.js"></script>
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <div id="topbar">
+        <div id="topbarinfo">
+            <p id="name" class="info"></p>
+            <p id="email" class="info"></p>
+        </div>
+        <div class="g-signin2" data-onsuccess="onSignIn"></div>
+        <a href="#" onclick="signOut();">Sign out</a>
+        
+        <div id="email"></div>
+        <div id="photo"></div>
+        
+        <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script> 
+        <script src="main.js"></script>
+        <script src="https://apis.google.com/js/platform.js?onload=appStart" async defer></script>
 </body>
 
 </html>

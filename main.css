@@ -1,0 +1,17 @@
+#topbar {
+    height: 60px;
+    width: auto;
+    margin-top: 0px;
+    margin-left: 0px;
+    margin-right: 0px;
+    background-color: grey;
+}
+
+#bottombar {
+    height: 100px;
+    width: auto;
+    margin-top: 50px;
+    margin-left: 50px;
+    margin-right: 50px;
+    background-color: blue;
+}
