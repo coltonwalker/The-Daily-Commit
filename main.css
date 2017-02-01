@@ -15,3 +15,7 @@
     margin-right: 50px;
     background-color: blue;
 }
+
+#plus-button-dialog {
+    display: none;
+}

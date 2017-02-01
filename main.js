@@ -65,3 +65,32 @@ function signOut() {
   });
   $('.g-signin2').show();
 }
+
+function post(url, json, success, error) {
+  $.ajax({
+    url : route(url),
+    method : 'POST',
+    data : json,
+    headers : {
+      'Authorization' : authResponse.id_token
+    },
+    success : function() {
+      if(success) success();
+    },
+    error : function() {
+      if(error) error();
+    }
+  });
+}
+
+
+$('#plus-button').click(function() {
+    $('#plus-button-dialog').dialog('open');
+});
+
+$('#plus-button-dialog').dialog({
+    autoOpen: false,
+    height: 400,
+    width: 350,
+    modal: true,
+});
