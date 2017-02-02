@@ -1,46 +1,70 @@
-var fs = require('fs');
-var jwt = require('jsonwebtoken');
-var http = require('http');
-var Mongo = require('mongodb').MongoClient;
-var express = require('express');
-var bodyParser = require('body-parser');
-var mongo_url = 'mongodb://localhost:27017/apcsp';
-//static MongoDB operations
-Mongo.connect(mongo_url, function (err, db) {
-    if (err) {
-        console.log('MongoDB connection error');
-    }
-    else {
-        console.log('Connectedd to MongoDB');
-    }
-});
+var fs = require('fs'); // file systems
+var jwt = require('jsonwebtoken'); // json web tokens
+var http = require('http'); // http protocol
+var moment = require('moment'); // time library
+var express = require('express'); // web server
+var request = require('request'); // http trafficer
+var jwkToPem = require('jwk-to-pem'); // converts json web key to pem
+var bodyParser = require('body-parser'); // http body parser
+var Mongo = require('mongodb').MongoClient; // MongoDB driver
 
-var app = express();
+var keyCache = {}; // public key cache
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(allowCrossDomain);
-app.use(authorize);
+const MONGO_URL = 'mongodb://localhost:27017/apcsp';
+const CLIENT_ID = '79304338992-ku691e9ju2g9deg6ndkrfpf0njl4prsf.apps.googleusercontent.com';
 
-app.post('/login', function(req, res) {
-    log('/login req.body = ', req.body);
-    var query = {
-        id: req.body.id
+/**
+ * MongoDB operations
+ * connects to MongoDB and registers a series of asynchronous methods
+ */
+Mongo.connect(MONGO_URL, function(err, db) {
+    
+    // TODO: handle err
+
+    Mongo.ops = {};
+    
+        
+    Mongo.ops.find = function(collection, json, callback) {
+        db.collection(collection).find(json).toArray(function(err, docs) {
+            // TODO: handle err
+            if(callback) callback(err, docs);
+        });
     };
-    Mongo.ops.upsert('login', query, req.body);
-    res.status(201).send('ok');
+    
+    Mongo.ops.findOne = function(collection, json, callback) {
+        db.collection(collection).findOne(json, function(err, doc) {
+            // TODO: handle err
+            if(callback) callback(err, doc);
+        });
+    };
+
+    Mongo.ops.insert = function(collection, json, callback) {
+        db.collection(collection).insert(json, function(err, result) {
+            // TODO: handle err
+            if(callback) callback(err, result);
+        });
+    };
+
+    Mongo.ops.upsert = function(collection, query, json, callback) {
+        db.collection(collection).updateOne(query, { $set: json }, { upsert: true }, function(err, result) {
+            // TODO: handle err
+            if (callback) callback(err, result);
+        });
+    };
+    
+    Mongo.ops.updateOne = function(collection, query, json, callback) {
+        db.collection(collection).updateOne(query, { $set : json }, function(err, result) {
+            // TODO: handle err
+            if(callback) callback(err, result);
+        });
+    };
 });
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended : false }));
-
-app.get('/', function(req, res) {
-    res.send('hello');
-});
-
-app.listen(3000);
-console.log('listening to 3000');
-
+/**
+ * Middleware:
+ * allows cross domain requests
+ * ends preflight checks
+ */
 function allowCrossDomain(req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE');
@@ -55,6 +79,10 @@ function allowCrossDomain(req, res, next) {
     }
 }
 
+/**
+ * Middlware:
+ * validate tokens and authorize users
+ */
 function authorize(req, res, next) {
 
     // jwt.decode: https://github.com/auth0/node-jsonwebtoken#jwtdecodetoken--options
@@ -94,6 +122,33 @@ function authorize(req, res, next) {
     }
 }
 
+// web server
+var app = express();
+
+// use middlewares
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(allowCrossDomain);
+app.use(authorize);
+
+app.post('/login', function(req, res) {
+    log('/login req.body = ', req.body);
+    var query = {
+        id: req.body.id
+    };
+    Mongo.ops.upsert('login', query, req.body);
+    res.status(201).send('ok');
+});
+
+// listen on port 3000
+app.listen(3000, function() {
+    cacheWellKnownKeys();
+    log('listening on port 3000');
+});
+
+/**
+ * Converts json web key to pem key
+ */
 function getPem(keyID) {
     var jsonWebKeys = keyCache.keys.filter(function(key) {
         return key.kid === keyID;
@@ -101,6 +156,9 @@ function getPem(keyID) {
     return jwkToPem(jsonWebKeys[0]);
 }
 
+/**
+ * Cache Google's well known public keys
+ */
 function cacheWellKnownKeys() {
 
     // get the well known config from google
@@ -127,6 +185,9 @@ function cacheWellKnownKeys() {
     });
 }
 
+/**
+ * Custom logger to prevent circular reference in JSON.parse(obj)
+ */
 function log(msg, obj) {
     console.log('\n');
     if (obj) {
