@@ -10,7 +10,7 @@ if (window.location.hostname === '127.0.0.1') {
 
 // prepend the url of node.js server
 function route(url) {
-  return 'http://10.10.90.8:3000' + url;
+  return 'http://10.10.89.212:3000' + url;
 }
 
 var profile;      // google user profile
@@ -35,7 +35,27 @@ function onSignIn(googleUser) {
   $('.g-signin2').hide();
   $('#email').html('<p>' + profile.getEmail() + '</p>');
   $('#photo').html('<img src="' + profile.getImageUrl() + '">');
+    
+    get('/usless', function(data) {
+        for(var i = 0; i < data.length; i++) {
+            $('anylist').append('<p>' + data[i].user_text + </p>);
+        }
+    });
 }
+
+$('#plus-add-button').click(functon() {
+                            var txt = $('#user-text').val();
+        
+        var data = {
+            id : profile.getId(),
+            user_text : txt
+        };
+        
+        post('/useless' data, function() {
+            
+        }
+}
+
 
 function signOut() {
   gapi.auth2.getAuthInstance().signOut();
@@ -51,6 +71,23 @@ function disconnect() {
   $('#photo').html('');
 }
 
+function get(url, success, error) {
+    $.ajax({
+        url: route(url),
+        method: 'GET',
+        headers : {
+        'Authorization' : authResponce.id_token
+        },
+        success : function(data) {
+            if(success) success(data);
+        },
+        error : function() {
+            if(error) error();
+        }
+    });
+}     
+              
+        
 function post(url, json, success, error) {
   $.ajax({
     url : route(url),
